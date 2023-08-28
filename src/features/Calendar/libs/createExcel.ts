@@ -227,11 +227,8 @@ export const createExcel = async (
                 }
 
                 if (isWeekend) {
-                    toBePaidOvertimeValue = Math.min(
-                        workHoursValue,
-                        STANDARD_WORK_HOURS - 0.5
-                    );
-                    fromOvertimeValue = from;
+                    (toBePaidOvertimeValue = workHoursValue),
+                        (fromOvertimeValue = from);
                     toOvertimeValue = to;
                     fromValue = '';
                     toValue = '';
