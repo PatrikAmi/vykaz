@@ -23,6 +23,7 @@ export const AdditionalInfo = (props: Props) => {
                         label='Meno'
                         value={firstName}
                         onChange={handleAdditionalInfoChange}
+                        required
                         sx={{ pr: 3 }}
                     />
                     <TextField
@@ -31,6 +32,7 @@ export const AdditionalInfo = (props: Props) => {
                         label='Priezvisko'
                         value={lastName}
                         onChange={handleAdditionalInfoChange}
+                        required
                         sx={{ pr: 3 }}
                     />
                     <TextField

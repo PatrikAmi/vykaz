@@ -2,7 +2,12 @@
 
 import { Box, TextField, Typography } from '@mui/material';
 import { memo } from 'react';
-import { FROM, HORIZONTAL_CALENDAR_SLOT_AMOUNT, TO } from '../constants';
+import {
+    FROM,
+    HORIZONTAL_CALENDAR_SLOT_AMOUNT,
+    INPUT_REGEX,
+    TO,
+} from '../constants';
 import { useCalendarSlot } from '../hooks/useCalendarSlot';
 
 type Props = {
@@ -24,7 +29,7 @@ const CalendarSlot = ({
     addBottomBorder = false,
     isSiblingMonth,
 }: Props) => {
-    const { handleChange } = useCalendarSlot(slotId);
+    const { handleChange /*, fromError, toError*/ } = useCalendarSlot(slotId);
 
     return (
         <Box
@@ -61,12 +66,16 @@ const CalendarSlot = ({
                         label='Od'
                         onChange={e => handleChange(e, FROM)}
                         value={from}
+                        /*error={fromError}
+                        helperText={fromError ? 'Zle zadaný čas' : ''}*/
                         sx={{ pr: 1 }}
                     />
                     <TextField
                         variant='standard'
                         label='Do'
                         onChange={e => handleChange(e, TO)}
+                        /*error={toError}
+                        helperText={toError ? 'Zle zadaný čas' : ''}*/
                         value={to}
                     />
                 </Box>

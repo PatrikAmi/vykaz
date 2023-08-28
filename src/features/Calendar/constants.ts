@@ -27,5 +27,20 @@ export const EMPTY_FROM_TO = {
 };
 export const SATURDAY = 6;
 export const SUNDAY = 0;
-
 export const ADDITIONAL_INFO_LOCAL_STORAGE_KEY = 'AdditionalInfo';
+export const TIMES_NEW_ROMAN = 'Times New Roman';
+
+export enum POSSIBLE_INPUTS {
+    HOLIDAY = 'D',
+    TIME_OFF = 'NV',
+    CUSTOM = 'S',
+}
+
+export const INPUT_REGEX =
+    /^(S|s|NV|nv|D|d|(?:[01]?[0-9]|2[0-4])[\.: ][0-5][0-9])$/;
+
+export const LETTER_REGEX = /^(S|s|NV|nv|D|d)$/;
+
+export const TIME_REGEX = /^([01]?[0-9]|2[0-4])[\.: ]([0-5][0-9])$/;
+
+export const STANDARD_WORK_HOURS = 8;
