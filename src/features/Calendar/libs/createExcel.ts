@@ -260,9 +260,15 @@ export const createExcel = async (
                     toValue = '';
                 } else {
                     //subtracting night hours because I'm adding them to overtime pay instead
-                    toBePaidValue =
-                        Math.min(workHoursValue, STANDARD_WORK_HOURS - 0.5) -
-                        nightHoursToAdd;
+                    toBePaidValue = Math.min(
+                        workHoursValue,
+                        STANDARD_WORK_HOURS - 0.5
+                    );
+
+                    //subtract only if you didn't already subtract from overTimeGainValue
+                    if (workHours <= STANDARD_WORK_HOURS) {
+                        toBePaidValue -= nightHoursToAdd;
+                    }
 
                     additionalHoursTogether += nightHoursToAdd;
 
