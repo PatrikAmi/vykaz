@@ -1,5 +1,5 @@
 import { CalendarDate } from 'calendar-base';
-import { Workbook, Worksheet } from 'exceljs';
+import { BorderStyle, Workbook, Worksheet } from 'exceljs';
 import { saveAs } from 'file-saver';
 import {
     MONTH_NAMES,
@@ -159,12 +159,12 @@ export const createExcel = async (
     createName(sheet, firstName, lastName);
     createHeader(sheet);
 
-    let dataRowNumber: number = 12;
+    let rowToUse: number = 12;
     const toSubtract: number = 11;
 
     fromToMonth.forEach(({ from, to }, i) => {
         if (!selectedMonth[i].siblingMonth) {
-            const dataRow = sheet.getRow(dataRowNumber);
+            const dataRow = sheet.getRow(rowToUse);
             dataRow.alignment = {
                 wrapText: true,
                 vertical: 'middle',
@@ -172,7 +172,7 @@ export const createExcel = async (
             };
             dataRow.font = { size: 12, name: TIMES_NEW_ROMAN };
 
-            const dayValue = dataRowNumber - toSubtract;
+            const dayValue = rowToUse - toSubtract;
             let fromValue = '';
             let toValue = '';
             let overtimeUseValue: number | '' = '';
@@ -201,13 +201,13 @@ export const createExcel = async (
             if (TIME_REGEX.test(from) && TIME_REGEX.test(to)) {
                 const fromNumber = timeToNumber(from);
                 const toNumber = timeToNumber(to);
-                fromValue = from;
-                toValue = to;
 
                 if (toNumber > fromNumber) {
                     workHours = toNumber - fromNumber;
                 }
 
+                fromValue = from;
+                toValue = to;
                 workHoursValue = removeBreakHours(workHours);
 
                 if (workHours > STANDARD_WORK_HOURS) {
@@ -293,7 +293,473 @@ export const createExcel = async (
                 }
             });
 
-            dataRowNumber++;
+            rowToUse++;
+        }
+    });
+
+    const sumRow = sheet.getRow(rowToUse);
+    sumRow.alignment = {
+        wrapText: true,
+        vertical: 'middle',
+        horizontal: 'center',
+    };
+    sumRow.font = { size: 12, name: TIMES_NEW_ROMAN };
+    sumRow.values = Array(11).fill('');
+
+    sumRow.eachCell((cell, i) => {
+        cell.border = {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+        };
+
+        if ([4, 7, 8, 9, 10, 11].includes(i)) {
+            cell.numFmt = '0.00';
+            const letter = String.fromCharCode(i + 64);
+            cell.value = {
+                formula: `SUM(${letter}12:${letter}${rowToUse - 1})`,
+                date1904: false,
+            };
+        }
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if (i === 11) {
+            cell.border.right = { style: 'thick' };
+        }
+    });
+
+    const lastRow = sheet.getRow(rowToUse + 1);
+    lastRow.alignment = { horizontal: 'center' };
+    lastRow.font = { size: 10 };
+    lastRow.height = 40;
+    lastRow.values = Array(11).fill('');
+
+    lastRow.eachCell((cell, i) => {
+        cell.border = {
+            top: { style: 'thin' },
+            right: { style: 'thin' },
+            bottom: { style: 'thick' },
+            left: { style: 'thin' },
+        };
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if (i === 11) {
+            cell.border.right = { style: 'thick' };
+        }
+    });
+
+    rowToUse++;
+
+    sheet.mergeCells(`A${rowToUse}`, `B${rowToUse}`);
+    sheet.getCell(`A${rowToUse}`).value = 'V Dolnom Kubíne:';
+
+    sheet.mergeCells(`C${rowToUse}`, `D${rowToUse}`);
+    sheet.getCell(`C${rowToUse}`).value = `${month}/28/${year}`;
+
+    rowToUse += 2;
+
+    sheet.mergeCells(`A${rowToUse}`, `C${rowToUse}`);
+    const workerCell = sheet.getCell(`A${rowToUse}`);
+    workerCell.font = { size: 10 };
+    workerCell.value = ' Pracovník:........................';
+
+    const directorCell = sheet.getCell(`J${rowToUse}`);
+    directorCell.font = { size: 10 };
+    directorCell.alignment = { horizontal: 'center' };
+    directorCell.value = 'Riaditeľka MsKS';
+
+    rowToUse += 2;
+
+    const titleRow = sheet.getRow(rowToUse);
+    titleRow.height = 30;
+
+    const titleCell = sheet.getCell(`F${rowToUse}`);
+    titleCell.font = { size: 14, name: 'Times New Roman' };
+    titleCell.alignment = { horizontal: 'center' };
+    titleCell.value = 'Mestské kultúrne stredisko Dolný Kubín';
+
+    const personalNumberCell1 = sheet.getCell(`J${rowToUse}`);
+    const personalNumberCell2 = sheet.getCell(`K${rowToUse}`);
+    const thickBorder = {
+        top: { style: 'thick' as BorderStyle },
+        right: { style: 'thick' as BorderStyle },
+        bottom: { style: 'thick' as BorderStyle },
+        left: { style: 'thick' as BorderStyle },
+    };
+    personalNumberCell1.border = thickBorder;
+    personalNumberCell2.border = thickBorder;
+    personalNumberCell1.alignment = { horizontal: 'center' };
+    personalNumberCell2.alignment = { horizontal: 'center' };
+    personalNumberCell1.font = { bold: true, size: 10 };
+    personalNumberCell2.font = { bold: true, size: 18 };
+    personalNumberCell1.value = 'OS.Č.';
+    personalNumberCell2.value = `${personalNumber}`;
+
+    rowToUse += 2;
+
+    const vykazTitleCell = sheet.getCell(`F${rowToUse}`);
+    vykazTitleCell.alignment = { horizontal: 'center' };
+    vykazTitleCell.font = { size: 14, bold: true, name: 'Times New Roman' };
+    vykazTitleCell.value = `VÝKAZ PRÁCE za ${MONTH_NAMES[month]} ${year}`;
+
+    rowToUse += 2;
+
+    for (let i = 0; i < 10; i++) {
+        const row = sheet.getRow(rowToUse + i);
+        row.font = { size: 12, name: 'Times New Roman' };
+    }
+
+    sheet.getRow(rowToUse).font.bold = true;
+
+    sheet.mergeCells(`A${rowToUse}`, `B${rowToUse}`);
+    const nameTitleCell = sheet.getCell(`A${rowToUse}`);
+    nameTitleCell.value = 'Meno: ';
+    nameTitleCell.border = {
+        top: { style: 'thick' },
+        left: { style: 'thick' },
+    };
+
+    sheet.mergeCells(`C${rowToUse}`, `E${rowToUse}`);
+    const nameCell = sheet.getCell(`C${rowToUse}`);
+    nameCell.alignment = { horizontal: 'center' };
+    nameCell.value = `${firstName} ${lastName}`;
+    nameCell.border = {
+        top: { style: 'thick' },
+        right: { style: 'thick' },
+    };
+
+    sheet.mergeCells(`F${rowToUse}`, `K${rowToUse}`);
+    const recapitulationCell = sheet.getCell(`F${rowToUse}`);
+    recapitulationCell.alignment = { horizontal: 'center' };
+    recapitulationCell.value = 'Rekapitulácia';
+    recapitulationCell.border = {
+        top: { style: 'thick' },
+        left: { style: 'thick' },
+        right: { style: 'thick' },
+    };
+
+    rowToUse++;
+
+    sheet.getCell(`A${rowToUse}`).border = {
+        bottom: { style: 'thick' },
+        left: { style: 'thick' },
+    };
+    sheet.getCell(`E${rowToUse}`).border = {
+        right: { style: 'thick' },
+        bottom: { style: 'thick' },
+    };
+    sheet.getCell(`K${rowToUse}`).border = {
+        right: { style: 'thick' },
+        bottom: { style: 'thick' },
+    };
+
+    rowToUse++;
+
+    const priplatkyRow = sheet.getRow(rowToUse);
+    priplatkyRow.values = [
+        '',
+        '',
+        'PRÍPLATKY',
+        '',
+        '',
+        'Odprac. celkom:',
+        '',
+        `TODO`,
+        'dní',
+        `TODO`,
+        'hod.',
+    ];
+    sheet.mergeCells(`F${rowToUse}`, `G${rowToUse}`);
+    priplatkyRow.eachCell((cell, i) => {
+        cell.border = {
+            top: { style: 'thick' },
+            bottom: { style: 'thick' },
+        };
+
+        if (i === 1) {
+            cell.border = {
+                top: { style: 'thick' },
+                left: { style: 'thick' },
+                bottom: { style: 'thick' },
+            };
+        }
+
+        if ([5, 11].includes(i)) {
+            cell.border = {
+                top: { style: 'thick' },
+                bottom: { style: 'thick' },
+                right: { style: 'thick' },
+            };
+        }
+
+        if ([3, 8, 10].includes(i)) {
+            cell.alignment = { horizontal: 'right' };
+        }
+    });
+
+    sheet.mergeCells(`B${rowToUse}`, `D${rowToUse}`);
+    const priplatkyCell = sheet.getCell(`B${rowToUse}`);
+    priplatkyCell.value = 'PRÍPLATKY';
+    priplatkyCell.font = {
+        size: 12,
+        name: 'Times New Roman',
+        bold: true,
+    };
+    priplatkyCell.alignment = { horizontal: 'center' };
+
+    const cellFiller = [
+        [
+            'Sviatok:',
+            '',
+            'TODO',
+            'hod.',
+            '',
+            'Dovolenka:',
+            '',
+            'TODO',
+            'dní',
+            'TODO',
+            'hod.',
+        ],
+        [
+            'Sobota:',
+            '',
+            'TODO',
+            'hod.',
+            '',
+            'Sviatky:',
+            '',
+            'TODO',
+            'dní',
+            'TODO',
+            'hod.',
+        ],
+        [
+            'Nedeľa:',
+            '',
+            'TODO',
+            'hod.',
+            '',
+            'PN:',
+            '',
+            'TODO',
+            'dní',
+            'TODO',
+            'hod.',
+        ],
+        [
+            'Nočné:',
+            '',
+            'TODO',
+            'hod.',
+            '',
+            'Paragraf vlastný:',
+            '',
+            'TODO',
+            'dní',
+            'TODO',
+            'hod.',
+        ],
+        [
+            'Nadčas:',
+            '',
+            'TODO',
+            'hod.',
+            '',
+            'Paragraf doprovod:',
+            '',
+            'TODO',
+            'dní',
+            'TODO',
+            'hod.',
+        ],
+    ];
+
+    cellFiller.forEach(rowData => {
+        rowToUse++;
+        const row = sheet.getRow(rowToUse);
+        row.values = rowData;
+        sheet.mergeCells(`A${rowToUse}`, `B${rowToUse}`);
+        sheet.mergeCells(`F${rowToUse}`, `G${rowToUse}`);
+
+        row.eachCell((cell, i) => {
+            cell.border = { bottom: { style: 'thin' } };
+
+            if ([3, 8, 10].includes(i)) {
+                cell.alignment = { horizontal: 'right' };
+            }
+        });
+    });
+
+    for (let i = 0; i < 5; i++) {
+        sheet.getCell(`A${55 + i}`).border = {
+            bottom: { style: 'thin' },
+            left: { style: 'thick' },
+        };
+
+        sheet.getCell(`E${55 + i}`).border = {
+            right: { style: 'thick' },
+            bottom: { style: 'thin' },
+        };
+
+        sheet.getCell(`K${55 + i}`).border = {
+            right: { style: 'thick' },
+            bottom: { style: 'thin' },
+        };
+    }
+
+    rowToUse++;
+
+    const emptyRow = sheet.getRow(rowToUse);
+    emptyRow.values = Array(11).fill('');
+
+    emptyRow.eachCell((cell, i) => {
+        if (i === 1) {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thick' },
+                bottom: { style: 'thick' },
+            };
+        }
+
+        if ([5, 11].includes(i)) {
+            cell.border = {
+                top: { style: 'thin' },
+                bottom: { style: 'thick' },
+                right: { style: 'thick' },
+            };
+        }
+    });
+
+    rowToUse++;
+
+    const togetherRow = sheet.getRow(rowToUse);
+    togetherRow.values = [
+        'SPOLU',
+        '',
+        'TODO',
+        'hod.',
+        '',
+        'Povinnosť:',
+        '',
+        'TODO',
+        'dní',
+        'TODO',
+        'hod.',
+    ];
+    sheet.mergeCells(`A${rowToUse}`, `B${rowToUse}`);
+    sheet.mergeCells(`F${rowToUse}`, `G${rowToUse}`);
+
+    togetherRow.eachCell((cell, i) => {
+        cell.border = { top: { style: 'thick' }, bottom: { style: 'thick' } };
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if ([5, 11].includes(i)) {
+            cell.border.right = { style: 'thick' };
+        }
+
+        if ([3, 8, 10].includes(i)) {
+            cell.alignment = { horizontal: 'right' };
+        }
+    });
+
+    rowToUse += 4;
+
+    const wageCalcTitleRow = sheet.getRow(rowToUse);
+    wageCalcTitleRow.alignment = { horizontal: 'center' };
+    wageCalcTitleRow.font = { bold: true, size: 12, name: 'Times New Roman' };
+    wageCalcTitleRow.values = [
+        ...Array(4).fill(''),
+        'V Ý P O Č E T  M Z D Y',
+        ...Array(6).fill(''),
+    ];
+    sheet.mergeCells(`E${rowToUse}`, `G${rowToUse}`);
+
+    wageCalcTitleRow.eachCell((cell, i) => {
+        cell.border = { top: { style: 'thick' }, bottom: { style: 'thick' } };
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if (i === 11) {
+            cell.border.right = { style: 'thick' };
+        }
+    });
+
+    for (let i = 0; i < 13; i++) {
+        rowToUse++;
+        const row = sheet.getRow(rowToUse);
+        row.values = Array(11).fill('');
+        row.height = 25;
+
+        row.eachCell((cell, i) => {
+            cell.border = {
+                bottom: { style: 'thin' },
+            };
+
+            if (i === 1) {
+                cell.border.left = { style: 'thick' };
+            }
+
+            if (i === 11) {
+                cell.border.right = { style: 'thick' };
+            }
+        });
+    }
+
+    rowToUse++;
+
+    const calculatedRow = sheet.getRow(rowToUse);
+    calculatedRow.values = Array(11).fill('');
+    calculatedRow.font = { size: 12, name: 'Times New Roman' };
+
+    calculatedRow.eachCell((cell, i) => {
+        cell.border = {
+            top: { style: 'thick' },
+        };
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if ([5, 11].includes(i)) {
+            cell.border.right = { style: 'thick' };
+        }
+    });
+
+    sheet.mergeCells(`A${rowToUse}`, `B${rowToUse}`);
+    const calculatedCell = sheet.getCell(`A${rowToUse}`);
+    calculatedCell.value = 'Vypočítal:';
+
+    sheet.getCell(`F${rowToUse}`).value = 'Dňa:';
+
+    rowToUse++;
+
+    const endRow = sheet.getRow(rowToUse);
+    endRow.values = Array(11).fill('');
+
+    endRow.eachCell((cell, i) => {
+        cell.border = {
+            bottom: { style: 'thick' },
+        };
+
+        if (i === 1) {
+            cell.border.left = { style: 'thick' };
+        }
+
+        if ([5, 11].includes(i)) {
+            cell.border.right = { style: 'thick' };
         }
     });
 

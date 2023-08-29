@@ -18,7 +18,7 @@ export default function RootLayout({
     return (
         <html lang='en'>
             <body className={inter.className}>
-                <Box sx={{ backgroundColor: 'rgb(240, 240, 240)', py: 6 }}>
+                <Box sx={{ backgroundColor: '#E6E8EE', py: 6 }}>
                     <Container>{children}</Container>
                 </Box>
             </body>
