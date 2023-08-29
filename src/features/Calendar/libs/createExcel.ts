@@ -361,7 +361,7 @@ export const createExcel = async (
     sheet.getCell(`A${rowToUse}`).value = 'V Dolnom Kubíne:';
 
     sheet.mergeCells(`C${rowToUse}`, `D${rowToUse}`);
-    sheet.getCell(`C${rowToUse}`).value = `${month}/28/${year}`;
+    sheet.getCell(`C${rowToUse}`).value = `${month + 1}/28/${year}`;
 
     rowToUse += 2;
 
