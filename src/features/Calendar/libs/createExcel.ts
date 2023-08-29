@@ -159,6 +159,11 @@ export const createExcel = async (
     createName(sheet, firstName, lastName);
     createHeader(sheet);
 
+    let saturdayHours = 0;
+    let sundayHours = 0;
+    let nightHours = 0;
+    let additionalHoursTogether = 0;
+
     let rowToUse: number = 12;
     const toSubtract: number = 11;
 
@@ -178,7 +183,7 @@ export const createExcel = async (
             let overtimeUseValue: number | '' = '';
             let fromOvertimeValue = '';
             let toOvertimeValue = '';
-            let overTimeGainValue: number | '' = '';
+            let overtimeGainValue: number | '' = '';
             let toBePaidOvertimeValue: number | '' = '';
             let customValue: number | '' = '';
             let workHoursValue: number | '' = '';
@@ -201,14 +206,35 @@ export const createExcel = async (
             if (TIME_REGEX.test(from) && TIME_REGEX.test(to)) {
                 const fromNumber = timeToNumber(from);
                 const toNumber = timeToNumber(to);
+                let nightHoursToAdd = 0;
 
                 if (toNumber > fromNumber) {
                     workHours = toNumber - fromNumber;
+
+                    if (toNumber > 22) {
+                        //Od 22:00 je nocna
+                        nightHoursToAdd = toNumber - Math.max(22, fromNumber);
+                        nightHours += nightHoursToAdd;
+                    }
+
+                    if (fromNumber < 6) {
+                        //do 6:00 je nocna
+                        nightHoursToAdd = Math.min(6, toNumber) - fromNumber;
+                        nightHours += nightHoursToAdd;
+                    }
                 }
 
                 fromValue = from;
                 toValue = to;
                 workHoursValue = removeBreakHours(workHours);
+
+                if (selectedMonth[i].weekDay === SATURDAY) {
+                    saturdayHours += workHoursValue;
+                }
+
+                if (selectedMonth[i].weekDay === SUNDAY) {
+                    sundayHours += workHoursValue;
+                }
 
                 if (workHours > STANDARD_WORK_HOURS) {
                     toValue = numberToTime(
@@ -217,26 +243,32 @@ export const createExcel = async (
                     fromOvertimeValue = toValue;
                     toOvertimeValue = to;
 
-                    if (isWeekend) {
-                        toBePaidOvertimeValue =
-                            workHoursValue - (STANDARD_WORK_HOURS - 0.5);
-                    } else {
-                        overTimeGainValue =
-                            workHoursValue - (STANDARD_WORK_HOURS - 0.5);
+                    if (!isWeekend) {
+                        overtimeGainValue =
+                            workHoursValue -
+                            (STANDARD_WORK_HOURS - 0.5) -
+                            nightHoursToAdd;
                     }
                 }
 
                 if (isWeekend) {
-                    (toBePaidOvertimeValue = workHoursValue),
-                        (fromOvertimeValue = from);
+                    toBePaidOvertimeValue = workHoursValue;
+                    additionalHoursTogether += workHoursValue;
+                    fromOvertimeValue = from;
                     toOvertimeValue = to;
                     fromValue = '';
                     toValue = '';
                 } else {
-                    toBePaidValue = Math.min(
-                        workHoursValue,
-                        STANDARD_WORK_HOURS - 0.5
-                    );
+                    //subtracting night hours because I'm adding them to overtime pay instead
+                    toBePaidValue =
+                        Math.min(workHoursValue, STANDARD_WORK_HOURS - 0.5) -
+                        nightHoursToAdd;
+
+                    additionalHoursTogether += nightHoursToAdd;
+
+                    if (nightHoursToAdd !== 0) {
+                        toBePaidOvertimeValue = nightHoursToAdd;
+                    }
                 }
             }
 
@@ -261,7 +293,7 @@ export const createExcel = async (
                 overtimeUseValue,
                 fromOvertimeValue,
                 toOvertimeValue,
-                overTimeGainValue,
+                overtimeGainValue,
                 toBePaidOvertimeValue,
                 customValue,
                 workHoursValue,
@@ -531,7 +563,7 @@ export const createExcel = async (
         [
             'Sobota:',
             '',
-            'TODO',
+            saturdayHours,
             'hod.',
             '',
             'Sviatky:',
@@ -544,7 +576,7 @@ export const createExcel = async (
         [
             'Nedeľa:',
             '',
-            'TODO',
+            sundayHours,
             'hod.',
             '',
             'PN:',
@@ -557,7 +589,7 @@ export const createExcel = async (
         [
             'Nočné:',
             '',
-            'TODO',
+            nightHours,
             'hod.',
             '',
             'Paragraf vlastný:',
@@ -570,7 +602,7 @@ export const createExcel = async (
         [
             'Nadčas:',
             '',
-            'TODO',
+            additionalHoursTogether,
             'hod.',
             '',
             'Paragraf doprovod:',
@@ -644,7 +676,7 @@ export const createExcel = async (
     togetherRow.values = [
         'SPOLU',
         '',
-        'TODO',
+        additionalHoursTogether,
         'hod.',
         '',
         'Povinnosť:',
