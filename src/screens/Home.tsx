@@ -25,7 +25,7 @@ export const Home = (props: Props) => {
             <Calendar />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant='h5' sx={{ mt: 3 }}>
-                    Alpha v0.1.7
+                    Alpha v0.1.8
                 </Typography>
                 <CreateExcelButton />
             </Box>
