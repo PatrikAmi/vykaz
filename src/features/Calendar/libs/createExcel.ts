@@ -249,7 +249,9 @@ export const createExcel = async (
                             (STANDARD_WORK_HOURS - 0.5) -
                             nightHoursToAdd;
 
-                        //subtracted too much. need to subtract from toBePaidValue later
+                        nightHoursToAdd = 0;
+
+                        //subtracted too much, need to subtract from toBePaidValue later
                         if (overtimeGainValue < 0) {
                             nightHoursToAdd = -overtimeGainValue;
                         }
