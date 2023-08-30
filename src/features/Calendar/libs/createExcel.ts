@@ -2,6 +2,7 @@ import { CalendarDate } from 'calendar-base';
 import { BorderStyle, Workbook, Worksheet } from 'exceljs';
 import { saveAs } from 'file-saver';
 import {
+    HOURS_IN_DAY,
     MONTH_NAMES,
     POSSIBLE_INPUTS,
     SATURDAY,
@@ -164,6 +165,10 @@ export const createExcel = async (
     //let nightHours = 0;
     let additionalHoursTogether = 0;
 
+    let workHoursSum = 0;
+    let holidaySum = 0;
+    let customsSum = 0;
+
     let rowToUse: number = 12;
     const toSubtract: number = 11;
 
@@ -282,12 +287,23 @@ export const createExcel = async (
                 toBePaidValue = overtimeUseValue;
             }
 
+            if (isHoliday) {
+                fromValue = POSSIBLE_INPUTS.HOLIDAY;
+                customValue = STANDARD_WORK_HOURS - 0.5;
+                workHoursValue = 0;
+                toBePaidValue = customValue;
+            }
+
             if (isCustom) {
                 fromValue = POSSIBLE_INPUTS.CUSTOM;
                 customValue = STANDARD_WORK_HOURS - 0.5;
                 workHoursValue = 0;
                 toBePaidValue = customValue;
             }
+
+            holidaySum += isHoliday && customValue ? customValue : 0;
+            customsSum += isCustom && customValue ? customValue : 0;
+            workHoursSum += workHoursValue ? workHoursValue : 0;
 
             dataRow.values = [
                 dayValue,
@@ -506,9 +522,9 @@ export const createExcel = async (
         '',
         'Odprac. celkom:',
         '',
-        `TODO`,
+        Math.floor(workHoursSum / HOURS_IN_DAY),
         'dní',
-        `TODO`,
+        workHoursSum % HOURS_IN_DAY,
         'hod.',
     ];
     sheet.mergeCells(`F${rowToUse}`, `G${rowToUse}`);
@@ -558,9 +574,9 @@ export const createExcel = async (
             '',
             'Dovolenka:',
             '',
-            'TODO',
+            Math.floor(holidaySum / HOURS_IN_DAY),
             'dní',
-            'TODO',
+            holidaySum % HOURS_IN_DAY,
             'hod.',
         ],
         [
@@ -571,9 +587,9 @@ export const createExcel = async (
             '',
             'Sviatky:',
             '',
-            'TODO',
+            Math.floor(customsSum / HOURS_IN_DAY),
             'dní',
-            'TODO',
+            customsSum % HOURS_IN_DAY,
             'hod.',
         ],
         [

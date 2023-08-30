@@ -29,6 +29,7 @@ export const SATURDAY = 6;
 export const SUNDAY = 0;
 export const ADDITIONAL_INFO_LOCAL_STORAGE_KEY = 'AdditionalInfo';
 export const TIMES_NEW_ROMAN = 'Times New Roman';
+export const HOURS_IN_DAY = 24;
 
 export enum POSSIBLE_INPUTS {
     HOLIDAY = 'D',
