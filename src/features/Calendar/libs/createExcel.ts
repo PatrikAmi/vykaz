@@ -522,9 +522,9 @@ export const createExcel = async (
         '',
         'Odprac. celkom:',
         '',
-        Math.floor(workHoursSum / HOURS_IN_DAY),
+        workHoursSum / 7.5,
         'dní',
-        workHoursSum % HOURS_IN_DAY,
+        workHoursSum,
         'hod.',
     ];
     sheet.mergeCells(`F${rowToUse}`, `G${rowToUse}`);
@@ -574,9 +574,9 @@ export const createExcel = async (
             '',
             'Dovolenka:',
             '',
-            Math.floor(holidaySum / HOURS_IN_DAY),
+            holidaySum / HOURS_IN_DAY,
             'dní',
-            holidaySum % HOURS_IN_DAY,
+            holidaySum,
             'hod.',
         ],
         [
@@ -587,9 +587,9 @@ export const createExcel = async (
             '',
             'Sviatky:',
             '',
-            Math.floor(customsSum / HOURS_IN_DAY),
+            customsSum / 7.5,
             'dní',
-            customsSum % HOURS_IN_DAY,
+            customsSum,
             'hod.',
         ],
         [
